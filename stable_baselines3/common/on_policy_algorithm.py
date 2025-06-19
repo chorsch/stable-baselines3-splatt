@@ -132,6 +132,7 @@ class OnPolicyAlgorithm(BaseAlgorithm):
             n_envs=self.n_envs,
             **self.rollout_buffer_kwargs,
         )
+        print('policy class: ', self.policy_class)
         self.policy = self.policy_class(  # type: ignore[assignment]
             self.observation_space, self.action_space, self.lr_schedule, use_sde=self.use_sde, **self.policy_kwargs
         )

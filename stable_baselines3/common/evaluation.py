@@ -132,6 +132,8 @@ def evaluate_policy(
 
         if render:
             env.render()
+    #Send plots to wandb
+    #plot_weights(observations[0], weights[0], actions[0], 'Test')
 
     mean_reward = np.mean(episode_rewards)
     std_reward = np.std(episode_rewards)
