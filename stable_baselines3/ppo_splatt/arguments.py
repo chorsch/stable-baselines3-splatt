@@ -105,6 +105,14 @@ parser.add_argument(
     type=str, 
     default="max",)
 parser.add_argument(
+    '--train_env', 
+    type=str, 
+    default="BabyAI-GoToRedBallGrey-v0",)
+parser.add_argument(
+    '--tau', 
+    type=float, 
+    default=1,)
+parser.add_argument(
     '--num_layers', 
     type=int, 
     default=1,)
