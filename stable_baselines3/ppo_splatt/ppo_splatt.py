@@ -230,6 +230,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
 
                 values, log_prob, entropy = self.policy.evaluate_actions(rollout_data.observations, actions)
                 eta = self.policy.pi_features_extractor.eta
+                out_eta = self.policy.pi_features_extractor.out_eta
                 values = values.flatten()
                 # Normalize advantage
                 advantages = rollout_data.advantages
@@ -272,7 +273,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
 
                 entropy_losses.append(entropy_loss.item())
 
-                weights_loss = self.weights_loss_fn(eta)
+                weights_loss = self.weights_loss_fn(out_eta)
                 weights_losses.append(weights_loss.item())
                 weights_entropies.append(get_entropy(eta).item())
 
@@ -312,7 +313,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
         explained_var = explained_variance(self.rollout_buffer.values.flatten(), self.rollout_buffer.returns.flatten())
 
         #Send plots to wandb
-        utils.plot_weights(rollout_data.observations[0], eta[0], actions[0], 'Train')
+        utils.plot_weights(rollout_data.observations[0], eta[0], out_eta[0], actions[0], 'Train')
 
         # Logs
         self.logger.record("sparsity/weights_loss", np.mean(weights_losses))

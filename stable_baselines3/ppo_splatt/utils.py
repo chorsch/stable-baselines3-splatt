@@ -17,7 +17,7 @@ def calculate_eta(weights):
         eta = torch.bmm(weights[:,i,:,:],eta)
     return eta
 
-def plot_weights(obs, weights, action, name):
+def plot_weights(obs, weights, out_eta, action, name):
     num_plots = 3
     fig, ax = plt.subplots(1,num_plots, figsize=(16, 9))
     
@@ -38,7 +38,8 @@ def plot_weights(obs, weights, action, name):
     if weights is not None:
         im = ax[2].imshow(weights.detach().cpu().numpy().T, cmap="viridis")
         d = int(np.sqrt(weights.shape[0]))
-        im2 = ax[1].imshow(weights.transpose(-2, -1).sum(-1).reshape(w,h).detach().cpu().numpy()/d**2, cmap="viridis")
+        #im2 = ax[1].imshow(weights.transpose(-2, -1).sum(-1).reshape(w,h).detach().cpu().numpy()/d**2, cmap="viridis")
+        im2 = ax[1].imshow(out_eta.reshape(w,h).detach().cpu().numpy(), cmap="viridis")
         ax[1].set_axis_off()
         fig.colorbar(im2, ax=ax[1], orientation="horizontal")
         fig.colorbar(im, ax=ax[2], orientation="horizontal")

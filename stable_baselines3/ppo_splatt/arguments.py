@@ -1,7 +1,7 @@
 import argparse
 import torch
 
-parser = argparse.ArgumentParser(description='RL')
+parser = argparse.ArgumentParser()
 
 parser.add_argument(
     '--policy_type', 
@@ -73,11 +73,6 @@ parser.add_argument(
     type=float, 
     default=0.0, 
     help='fixed weights loss coefficient')
-parser.add_argument(
-    '--num_keys', 
-    type=int, 
-    default=32, 
-    help='Number of fixed keys')
 
 parser.add_argument(
     '--weights_logits_coef', 
