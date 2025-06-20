@@ -29,6 +29,16 @@ parser.add_argument(
     default='False', 
     help='')
 parser.add_argument(
+    '--att_out_dim', 
+    type=int, 
+    default=512, 
+    help='')
+parser.add_argument(
+    '--num_agg_heads', 
+    type=int, 
+    default=4, 
+    help='')
+parser.add_argument(
     '--obs_type', 
     type=str, 
     default='standard', 
