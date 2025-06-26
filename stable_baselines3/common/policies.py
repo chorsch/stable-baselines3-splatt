@@ -989,11 +989,11 @@ class ContinuousCritic(BaseModel):
         return self.q_networks[0](th.cat([features, actions], dim=1))
 
 class MinigridFeaturesExtractor(BaseFeaturesExtractor):
-    def __init__(self, observation_space: gym.Space, features_dim: int = 512, normalized_image: bool = False) -> None:
+    def __init__(self, observation_space: gym.Space, features_dim: int = 128, normalized_image: bool = False) -> None:
         super().__init__(observation_space, features_dim)
-        n_input_channels = observation_space.shape[0]
+        n_input_channels = 3#observation_space.shape[0]
         self.cnn = nn.Sequential(
-            nn.Conv2d(n_input_channels, 16, (2, 2)),
+            nn.Conv2d(n_input_channels, 16, (2, 2),),
             nn.ReLU(),
             nn.Conv2d(16, 32, (2, 2)),
             nn.ReLU(),
@@ -1004,13 +1004,13 @@ class MinigridFeaturesExtractor(BaseFeaturesExtractor):
 
         # Compute shape by doing one forward pass
         with torch.no_grad():
-            n_flatten = self.cnn(torch.as_tensor(observation_space.sample()[None]).float()).shape[1]
+            sample = torch.as_tensor(observation_space.sample(), dtype=torch.float).unsqueeze(0)
+            n_flatten = self.cnn(sample).flatten().shape[0]
 
         self.linear = nn.Sequential(nn.Linear(n_flatten, features_dim), nn.ReLU())
 
     def forward(self, observations: torch.Tensor) -> torch.Tensor:
         return self.linear(self.cnn(observations))
-
 
 class ActorCriticPolicySplatt(BasePolicy):
     """
@@ -1134,6 +1134,9 @@ class ActorCriticPolicySplatt(BasePolicy):
         self.action_dist = make_proba_distribution(action_space, use_sde=use_sde, dist_kwargs=dist_kwargs)
 
         self._build(lr_schedule)
+
+        print('policy: ', self.pi_features_extractor)
+        print('value: ', self.vf_features_extractor)
 
     def _get_constructor_parameters(self) -> dict[str, Any]:
         data = super()._get_constructor_parameters()

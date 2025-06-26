@@ -24,13 +24,13 @@ def plot_weights(obs, weights, out_eta, action, name):
     #plot the observation
     img = torch.permute(obs,(1,2,0)).detach().cpu().numpy()/255.0
     w,h = img.shape[0]//8, img.shape[1]//8
-    if weights is not None:
-        dx = dy = 64//int(np.sqrt(weights.shape[0]))
-        # Custom (rgb) grid color
-        grid_color = [0,0,1]
-        # Modify the image to include the grid
-        img[:,::dy,:] = grid_color
-        img[::dx,:,:] = grid_color
+    # if weights is not None:
+    #     dx = dy = 64//int(np.sqrt(weights.shape[0]))
+    #     # Custom (rgb) grid color
+    #     grid_color = [0,0,1]
+    #     # Modify the image to include the grid
+    #     img[:,::dy,:] = grid_color
+    #     img[::dx,:,:] = grid_color
     ax[0].imshow(img)
 
     ax[0].set_axis_off()
@@ -60,8 +60,9 @@ def get_entropy(weights):
     assert out.shape == (b,), f'{b}, {out.shape}'
     return out.mean()/(np.log2(h*w)*h)
 
-def calculate_weights_coef_sin(t, t_max, c_max):
-    return (c_max/2) * np.sin(t*np.pi/t_max - np.pi/2) + (c_max/2)
+def calculate_weights_coef_sin(prog_rem, c_max):
+    # return (c_max/2) * np.sin(t*np.pi/t_max - np.pi/2) + (c_max/2)
+    return (c_max/2) * np.sin((1.0-prog_rem)*np.pi/1.0 - np.pi/2) + (c_max/2)
 
 def calculate_weights_coef_linear(t, t_max, c_max):
     return (c_max/t_max) * t
@@ -75,7 +76,7 @@ def bottom_k_inputs(k, weights, add_zero_attn=False):
     # return ((torch.topk(p, bot_k, dim=-1, largest=False)[0].sum(dim=-1)**2)*torch.nn.functional.relu(adv)).mean() * (bot_k/d)
 
 def L1_mask(eta, add_zero_attn=False):
-    return eta.sum()
+    return eta.mean()
 
 def positionalencoding2d(d_model, height, width):
     """

@@ -1,22 +1,31 @@
 import warnings
-from typing import Any, ClassVar, Optional, TypeVar, Union
+from typing import Any, ClassVar, NamedTuple, Optional, TypeVar, Union
 
 import numpy as np
 import torch as th
+import torch
 from gymnasium import spaces
 from torch.nn import functional as F
 
 from stable_baselines3.common.buffers import RolloutBuffer
 from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
 from stable_baselines3.common.policies import ActorCriticPolicySplatt, ActorCriticCnnPolicy, ActorCriticPolicy, BasePolicy, MultiInputActorCriticPolicy
-from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedule
-from stable_baselines3.common.utils import explained_variance, get_schedule_fn
+from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, ReplayBufferSamples, Schedule
+from stable_baselines3.common.utils import explained_variance, get_schedule_fn, obs_as_tensor
 
 from stable_baselines3.ppo_splatt import utils
 from stable_baselines3.ppo_splatt.utils import get_entropy, weights_logits_loss_fn
 
 SelfPPO = TypeVar("SelfPPO", bound="PPO")
 
+class ReplayBufferSamplesFrames(ReplayBufferSamples):
+    observations: th.Tensor
+    actions: th.Tensor
+    next_observations: th.Tensor
+    dones: th.Tensor
+    rewards: th.Tensor
+    frames: th.Tensor
+    
 
 class PPO_Splatt(OnPolicyAlgorithm):
     """
@@ -110,6 +119,9 @@ class PPO_Splatt(OnPolicyAlgorithm):
         device: Union[th.device, str] = "auto",
         _init_setup_model: bool = True,
         config=None,
+        pi_features_extractor = None,
+        vf_features_extractor = None,
+        share_features_extractor = False,
     ):
         super().__init__(
             policy,
@@ -180,12 +192,12 @@ class PPO_Splatt(OnPolicyAlgorithm):
 
         if config.weights_loss_fn == 'bottom_k_inputs':
             self.weights_loss_fn = lambda w: utils.bottom_k_inputs(k=config.k, weights = w)
-        
-        if config.weights_loss_fn == 'L1_mask':
+        elif config.weights_loss_fn == 'L1_mask':
             self.weights_loss_fn = utils.L1_mask
 
         if _init_setup_model:
             self._setup_model()
+
 
     def _setup_model(self) -> None:
         super()._setup_model()
@@ -197,6 +209,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
                 assert self.clip_range_vf > 0, "`clip_range_vf` must be positive, " "pass `None` to deactivate vf clipping"
 
             self.clip_range_vf = get_schedule_fn(self.clip_range_vf)
+
 
     def train(self) -> None:
         """
@@ -278,7 +291,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
                 weights_entropies.append(get_entropy(eta).item())
 
                 #assert False, f'epoch: {epoch},, n_epochs: {self.n_epochs}, weights_coef_max: {self.config.weights_coef_max}'
-                weights_loss_coef = self.calculate_weights_coef(epoch, self.n_epochs, self.config.weights_coef_max)
+                weights_loss_coef = self.calculate_weights_coef(self._current_progress_remaining, self.config.weights_coef_max)
                 loss = policy_loss + \
                         self.ent_coef * entropy_loss + \
                         self.vf_coef * value_loss + \
