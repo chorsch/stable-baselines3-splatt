@@ -122,6 +122,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
         pi_features_extractor = None,
         vf_features_extractor = None,
         share_features_extractor = False,
+        weights_loss_fn = None,
     ):
         super().__init__(
             policy,
@@ -190,10 +191,11 @@ class PPO_Splatt(OnPolicyAlgorithm):
         elif config.coef_fn == 'linear':
             self.calculate_weights_coef = utils.calculate_weights_coef_linear
 
-        if config.weights_loss_fn == 'bottom_k_inputs':
-            self.weights_loss_fn = lambda w: utils.bottom_k_inputs(k=config.k, weights = w)
-        elif config.weights_loss_fn == 'L1_mask':
-            self.weights_loss_fn = utils.L1_mask
+        # if config.weights_loss_fn == 'bottom_k_inputs':
+        #     self.weights_loss_fn = lambda w: utils.bottom_k_inputs(k=config.k, weights = w)
+        # elif config.weights_loss_fn == 'L1_mask':
+        #     self.weights_loss_fn = utils.L1_mask
+        self.weights_loss_fn = weights_loss_fn
 
         if _init_setup_model:
             self._setup_model()
@@ -286,7 +288,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
 
                 entropy_losses.append(entropy_loss.item())
 
-                weights_loss = self.weights_loss_fn(out_eta)
+                weights_loss = self.weights_loss_fn(eta, out_eta)
                 weights_losses.append(weights_loss.item())
                 weights_entropies.append(get_entropy(eta).item())
 
