@@ -283,7 +283,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
 
                 entropy_losses.append(entropy_loss.item())
 
-                weights_loss = self.weights_loss_fn(eta, out_eta)
+                weights_loss = self.weights_loss_fn(eta, out_eta, eta_mask, out_mask)
                 weights_losses.append(weights_loss.item())
                 weights_entropies.append(get_entropy(eta).item())
 
