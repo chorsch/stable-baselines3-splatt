@@ -17,6 +17,43 @@ def calculate_eta(weights):
         eta = torch.bmm(weights[:,i,:,:],eta)
     return eta
 
+def plot_weights_mask(obs, eta, out_eta, eta_mask, out_mask, action, name):
+    num_plots = 5 
+    fig, ax = plt.subplots(3,2, figsize=(16, 9))
+    
+    #plot the observation
+    img = torch.permute(obs,(1,2,0)).detach().cpu().numpy()/255.0
+    w,h = img.shape[0]//8, img.shape[1]//8
+    # if weights is not None:
+    #     dx = dy = 64//int(np.sqrt(weights.shape[0]))
+    #     # Custom (rgb) grid color
+    #     grid_color = [0,0,1]
+    #     # Modify the image to include the grid
+    #     img[:,::dy,:] = grid_color
+    #     img[::dx,:,:] = grid_color
+    ax[0,0].imshow(img)
+    ax[0,0].set_axis_off()
+
+    ax[0,1].set_axis_off()
+
+    fig.suptitle(f'{name}, action:{action.item()}')
+    im = ax[1,0].imshow(eta.detach().cpu().numpy().T, cmap="viridis")
+    fig.colorbar(im, ax=ax[1,0], orientation="horizontal")
+
+    d = int(np.sqrt(out_eta.shape[0]))
+    im = ax[1,1].imshow(out_eta.reshape(w,h).detach().cpu().numpy().T, cmap="viridis")
+    fig.colorbar(im, ax=ax[1,1], orientation="horizontal")
+
+    im = ax[2,0].imshow(eta_mask.detach().cpu().numpy().T, cmap="viridis")
+    fig.colorbar(im, ax=ax[2,0], orientation="horizontal")
+
+    d = int(np.sqrt(out_mask.shape[0]))
+    im = ax[2,1].imshow(out_mask.reshape(w,h).detach().cpu().numpy().T, cmap="viridis")
+    fig.colorbar(im, ax=ax[2,1], orientation="horizontal")
+
+    wandb.log({f"weights heatmap {name}": plt})
+    plt.close()
+
 def plot_weights(obs, weights, out_eta, action, name):
     num_plots = 3
     fig, ax = plt.subplots(1,num_plots, figsize=(16, 9))

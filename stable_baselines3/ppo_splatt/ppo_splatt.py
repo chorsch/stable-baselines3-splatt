@@ -17,14 +17,6 @@ from stable_baselines3.ppo_splatt import utils
 from stable_baselines3.ppo_splatt.utils import get_entropy, weights_logits_loss_fn
 
 SelfPPO = TypeVar("SelfPPO", bound="PPO")
-
-class ReplayBufferSamplesFrames(ReplayBufferSamples):
-    observations: th.Tensor
-    actions: th.Tensor
-    next_observations: th.Tensor
-    dones: th.Tensor
-    rewards: th.Tensor
-    frames: th.Tensor
     
 
 class PPO_Splatt(OnPolicyAlgorithm):
@@ -246,6 +238,9 @@ class PPO_Splatt(OnPolicyAlgorithm):
                 values, log_prob, entropy = self.policy.evaluate_actions(rollout_data.observations, actions)
                 eta = self.policy.pi_features_extractor.eta
                 out_eta = self.policy.pi_features_extractor.out_eta
+                eta_mask = self.policy.pi_features_extractor.eta_mask
+                out_mask = self.policy.pi_features_extractor.out_mask
+
                 values = values.flatten()
                 # Normalize advantage
                 advantages = rollout_data.advantages
@@ -328,7 +323,9 @@ class PPO_Splatt(OnPolicyAlgorithm):
         explained_var = explained_variance(self.rollout_buffer.values.flatten(), self.rollout_buffer.returns.flatten())
 
         #Send plots to wandb
-        utils.plot_weights(rollout_data.observations[0], eta[0], out_eta[0], actions[0], 'Train')
+        # utils.plot_weights(rollout_data.observations[0], eta[0], out_eta[0], actions[0], 'Train')
+        self.policy.pi_features_extractor.plot_weights_mask(rollout_data.observations[0],
+                                eta[0], out_eta[0], eta_mask[0], out_mask[0], actions[0], 'Train')
 
         # Logs
         self.logger.record("sparsity/weights_loss", np.mean(weights_losses))
