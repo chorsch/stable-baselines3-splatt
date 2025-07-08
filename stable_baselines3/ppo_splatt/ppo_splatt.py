@@ -317,7 +317,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
                 th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
                 self.policy.optimizer.step()
 
-                self.lambda_coef = self.adaptive_sparsity.update(rollout_data.returns)
+                self.lambda_coef = self.adaptive_sparsity.update([ep_info["r"] for ep_info in self.ep_info_buffer])
 
             self._n_updates += 1
             if not continue_training:
