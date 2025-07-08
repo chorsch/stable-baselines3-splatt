@@ -27,12 +27,18 @@ parser.add_argument(
     '--tau', 
     type=float, 
     default=1.0, 
+    help='The temperature of the softmax in the masks.',
+    )
+parser.add_argument(
+    '--reward_threshhold', 
+    type=float, 
+    default=1.0, 
     help='The average return at which you can start sparsifying.',
     )
 parser.add_argument(
     '--lambda_init', 
     type=float, 
-    default=1.0, 
+    default=100.0, 
     help='The initial Lambda sparsity coeffecient value',
     )
 parser.add_argument(

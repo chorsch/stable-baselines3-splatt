@@ -185,7 +185,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
 
         self.weights_loss_fn = weights_loss_fn
 
-        self.tau = config.tau
+        self.reward_threshhold = config.reward_threshhold
         self.lambda_coef = torch.tensor(config.lambda_init, requires_grad=True, device="cuda")
         self.lambda_optimizer = torch.optim.Adam(params=[self.lambda_coef])
 
@@ -316,7 +316,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
                 th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
                 self.policy.optimizer.step()
 
-                lambda_loss = self.lambda_coef * torch.exp(rollout_data.returns.mean() - self.tau)
+                lambda_loss = -1.0 * self.lambda_coef**2 * torch.exp(rollout_data.returns.mean() - self.reward_threshhold)
                 self.lambda_optimizer.zero_grad()
                 lambda_loss.backward()
                 self.lambda_optimizer.step()
