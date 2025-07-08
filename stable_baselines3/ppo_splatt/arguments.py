@@ -36,6 +36,12 @@ parser.add_argument(
     help='The average return at which you can start sparsifying.',
     )
 parser.add_argument(
+    '--lambda_lr', 
+    type=float, 
+    default=1.0, 
+    help='The learning rate for the lambda sparsity coefficient.',
+    )
+parser.add_argument(
     '--lambda_init', 
     type=float, 
     default=100.0, 

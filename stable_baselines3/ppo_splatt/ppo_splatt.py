@@ -187,7 +187,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
 
         self.reward_threshhold = config.reward_threshhold
         self.lambda_coef = torch.tensor(config.lambda_init, requires_grad=True, device="cuda")
-        self.lambda_optimizer = torch.optim.Adam(params=[self.lambda_coef])
+        self.lambda_optimizer = torch.optim.Adam(params=[self.lambda_coef], lr=config.lambda_lr)
 
         if _init_setup_model:
             self._setup_model()
@@ -292,7 +292,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
                 loss = policy_loss + \
                         self.ent_coef * entropy_loss + \
                         self.vf_coef * value_loss + \
-                        weights_loss_coef / self.lambda_coef.detach()
+                        weights_loss / self.lambda_coef.detach()
 
                 # Calculate approximate form of reverse KL Divergence for early stopping
                 # see issue #417: https://github.com/DLR-RM/stable-baselines3/issues/417
