@@ -24,6 +24,18 @@ parser.add_argument(
 
 # SPLATT arguments
 parser.add_argument(
+    '--tau', 
+    type=float, 
+    default=1.0, 
+    help='The average return at which you can start sparsifying.',
+    )
+parser.add_argument(
+    '--lambda_init', 
+    type=float, 
+    default=1.0, 
+    help='The initial Lambda sparsity coeffecient value',
+    )
+parser.add_argument(
     '--use_gumbel_mask', 
     type=str, 
     default='False', 
@@ -113,10 +125,6 @@ parser.add_argument(
     '--train_env', 
     type=str, 
     default="BabyAI-GoToRedBallGrey-v0",)
-parser.add_argument(
-    '--tau', 
-    type=float, 
-    default=1,)
 parser.add_argument(
     '--num_layers', 
     type=int, 

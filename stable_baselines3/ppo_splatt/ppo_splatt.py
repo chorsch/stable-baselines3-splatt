@@ -183,11 +183,11 @@ class PPO_Splatt(OnPolicyAlgorithm):
         elif config.coef_fn == 'linear':
             self.calculate_weights_coef = utils.calculate_weights_coef_linear
 
-        # if config.weights_loss_fn == 'bottom_k_inputs':
-        #     self.weights_loss_fn = lambda w: utils.bottom_k_inputs(k=config.k, weights = w)
-        # elif config.weights_loss_fn == 'L1_mask':
-        #     self.weights_loss_fn = utils.L1_mask
         self.weights_loss_fn = weights_loss_fn
+
+        self.tau = config.tau
+        self.lambda_coef = torch.tensor(config.lambda_init, requires_grad=True, device="cuda")
+        self.lambda_optimizer = torch.optim.Adam(params=[self.lambda_coef])
 
         if _init_setup_model:
             self._setup_model()
@@ -292,7 +292,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
                 loss = policy_loss + \
                         self.ent_coef * entropy_loss + \
                         self.vf_coef * value_loss + \
-                        weights_loss_coef * weights_loss 
+                        weights_loss_coef / self.lambda_coef.detach()
 
                 # Calculate approximate form of reverse KL Divergence for early stopping
                 # see issue #417: https://github.com/DLR-RM/stable-baselines3/issues/417
@@ -316,6 +316,11 @@ class PPO_Splatt(OnPolicyAlgorithm):
                 th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
                 self.policy.optimizer.step()
 
+                lambda_loss = self.lambda_coef * torch.exp(rollout_data.returns.mean() - self.tau)
+                self.lambda_optimizer.zero_grad()
+                lambda_loss.backward()
+                self.lambda_optimizer.step()
+
             self._n_updates += 1
             if not continue_training:
                 break
@@ -328,6 +333,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
                                 eta[0], out_eta[0], eta_mask[0], out_mask[0], actions[0], 'Train')
 
         # Logs
+        self.logger.record("sparsity/lambda", self.lambda_coef.item())
         self.logger.record("sparsity/weights_loss", np.mean(weights_losses))
         self.logger.record("sparsity/weights_loss_coef", weights_loss_coef)
         self.logger.record("sparsity/weights_entropy", np.mean(weights_entropies))
