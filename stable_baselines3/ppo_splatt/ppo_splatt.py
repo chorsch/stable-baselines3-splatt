@@ -115,6 +115,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
         vf_features_extractor = None,
         share_features_extractor = False,
         weights_loss_fn = None,
+        adaptive_sparsity = None,
     ):
         super().__init__(
             policy,
@@ -185,9 +186,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
 
         self.weights_loss_fn = weights_loss_fn
 
-        self.reward_threshhold = config.reward_threshhold
-        self.lambda_coef = torch.tensor(config.lambda_init, requires_grad=True, device="cuda")
-        self.lambda_optimizer = torch.optim.SGD(params=[self.lambda_coef], lr=config.lambda_lr)
+        self.adaptive_sparsity = adaptive_sparsity
 
         if _init_setup_model:
             self._setup_model()
@@ -223,6 +222,8 @@ class PPO_Splatt(OnPolicyAlgorithm):
         pg_losses, value_losses = [], []
         clip_fractions = []
         weights_losses, weights_entropies = [], []
+
+        self.lambda_coef = self.adaptive_sparsity.lambda_coef
 
         continue_training = True
         # train for n_epochs epochs
@@ -316,10 +317,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
                 th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
                 self.policy.optimizer.step()
 
-                lambda_loss = -1.0 * self.lambda_coef**2 * torch.exp(rollout_data.returns.mean() - self.reward_threshhold)
-                self.lambda_optimizer.zero_grad()
-                lambda_loss.backward()
-                self.lambda_optimizer.step()
+                self.lambda_coef = self.adaptive_sparsity.update(rollout_data.returns)
 
             self._n_updates += 1
             if not continue_training:
