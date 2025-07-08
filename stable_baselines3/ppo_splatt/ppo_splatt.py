@@ -187,7 +187,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
 
         self.reward_threshhold = config.reward_threshhold
         self.lambda_coef = torch.tensor(config.lambda_init, requires_grad=True, device="cuda")
-        self.lambda_optimizer = torch.optim.Adam(params=[self.lambda_coef], lr=config.lambda_lr)
+        self.lambda_optimizer = torch.optim.SGD(params=[self.lambda_coef], lr=config.lambda_lr)
 
         if _init_setup_model:
             self._setup_model()
