@@ -293,7 +293,7 @@ class PPO_Splatt(OnPolicyAlgorithm):
                 loss = policy_loss + \
                         self.ent_coef * entropy_loss + \
                         self.vf_coef * value_loss + \
-                        weights_loss / self.lambda_coef.detach()
+                        weights_loss * self.lambda_coef.detach()
 
                 # Calculate approximate form of reverse KL Divergence for early stopping
                 # see issue #417: https://github.com/DLR-RM/stable-baselines3/issues/417
@@ -317,12 +317,12 @@ class PPO_Splatt(OnPolicyAlgorithm):
                 th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
                 self.policy.optimizer.step()
 
-                self.lambda_coef = self.adaptive_sparsity.update([ep_info["r"] for ep_info in self.ep_info_buffer])
+            self.lambda_coef = self.adaptive_sparsity.update([ep_info["r"] for ep_info in self.ep_info_buffer])
 
             self._n_updates += 1
             if not continue_training:
                 break
-
+        
         explained_var = explained_variance(self.rollout_buffer.values.flatten(), self.rollout_buffer.returns.flatten())
 
         #Send plots to wandb
